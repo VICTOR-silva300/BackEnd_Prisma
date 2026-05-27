@@ -1,5 +1,6 @@
 const prisma = require("../data/prisma");
 
+
 const listar = async (req, res) => {
   try {
     const usuarios = await prisma.usuario.findMany({
@@ -16,6 +17,7 @@ const listar = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 const buscarPorId = async (req, res) => {
   try {
@@ -43,13 +45,10 @@ const buscarPorId = async (req, res) => {
   }
 };
 
+
 const cadastrar = async (req, res) => {
   try {
     const { nome, senha, email, idade } = req.body;
-
-    if (!nome || !senha || !email || !idade) {
-      return res.status(400).json({ error: "Preencha todos os campos" });
-    }
 
     const usuario = await prisma.usuario.create({
       data: {
@@ -66,6 +65,7 @@ const cadastrar = async (req, res) => {
   }
 };
 
+
 const atualizar = async (req, res) => {
   try {
     const { id } = req.params;
@@ -80,7 +80,10 @@ const atualizar = async (req, res) => {
 
     const usuario = await prisma.usuario.update({
       where: { id: Number(id) },
-      data: req.body
+      data: {
+        ...req.body,
+        idade: req.body.idade ? Number(req.body.idade) : undefined
+      }
     });
 
     res.status(200).json(usuario);
@@ -88,6 +91,7 @@ const atualizar = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 const deletar = async (req, res) => {
   try {

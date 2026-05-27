@@ -1,14 +1,26 @@
 const prisma = require("../data/prisma");
 
+
 const listarPedidos = async (req, res) => {
   try {
-    const pedidos = await prisma.pedido.findMany();
+    const pedidos = await prisma.pedido.findMany({
+      include: {
+        usuario: {
+          select: {
+            id: true,
+            nome: true,
+            email: true
+          }
+        }
+      }
+    });
 
     res.status(200).json(pedidos);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 const buscarPedidoPorId = async (req, res) => {
   try {
@@ -17,6 +29,15 @@ const buscarPedidoPorId = async (req, res) => {
     const pedido = await prisma.pedido.findUnique({
       where: {
         id: Number(id)
+      },
+      include: {
+        usuario: {
+          select: {
+            id: true,
+            nome: true,
+            email: true
+          }
+        }
       }
     });
 
@@ -30,21 +51,10 @@ const buscarPedidoPorId = async (req, res) => {
   }
 };
 
+
 const cadastrarPedido = async (req, res) => {
   try {
     const { produto, usuarioId } = req.body;
-
-    if (!produto || !usuarioId) {
-      return res.status(400).json({ error: "Preencha todos os campos" });
-    }
-
-    const usuarioExiste = await prisma.usuario.findUnique({
-      where: { id: Number(usuarioId) }
-    });
-
-    if (!usuarioExiste) {
-      return res.status(404).json({ error: "Usuário não encontrado" });
-    }
 
     const pedido = await prisma.pedido.create({
       data: {
@@ -59,21 +69,16 @@ const cadastrarPedido = async (req, res) => {
   }
 };
 
+
 const atualizarPedido = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const pedidoExiste = await prisma.pedido.findUnique({
-      where: { id: Number(id) }
-    });
-
-    if (!pedidoExiste) {
-      return res.status(404).json({ error: "Pedido não encontrado" });
-    }
-
     const pedido = await prisma.pedido.update({
       where: { id: Number(id) },
-      data: req.body
+      data: {
+        ...req.body
+      }
     });
 
     res.status(200).json(pedido);
@@ -82,17 +87,10 @@ const atualizarPedido = async (req, res) => {
   }
 };
 
+
 const deletarPedido = async (req, res) => {
   try {
     const { id } = req.params;
-
-    const pedidoExiste = await prisma.pedido.findUnique({
-      where: { id: Number(id) }
-    });
-
-    if (!pedidoExiste) {
-      return res.status(404).json({ error: "Pedido não encontrado" });
-    }
 
     await prisma.pedido.delete({
       where: { id: Number(id) }
